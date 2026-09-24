@@ -21,16 +21,25 @@ class Club(Base):
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(Text, nullable=True)
     status = Column(SAEnum(ClubStatus), nullable=False, default=ClubStatus.ACTIVE)
+    
+    # Leader is a student assigned by Admin
+    leader_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
+    # Legacy fields
     club_coordinator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     faculty_coordinator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    leader = relationship("User", foreign_keys=[leader_id], back_populates="clubs_led")
     club_coordinator = relationship("User", foreign_keys=[club_coordinator_id], back_populates="clubs_coordinated")
     faculty_coordinator = relationship("User", foreign_keys=[faculty_coordinator_id], back_populates="faculty_clubs")
     memberships = relationship("Membership", back_populates="club", cascade="all, delete-orphan")
     events = relationship("Event", back_populates="club")
+    event_requests = relationship("EventRequest", back_populates="club", cascade="all, delete-orphan")
+    budget_requests = relationship("BudgetRequest", back_populates="club", cascade="all, delete-orphan")
 
 
 class Membership(Base):
@@ -41,6 +50,7 @@ class Membership(Base):
     student_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False)
     status = Column(SAEnum(MembershipStatus), nullable=False, default=MembershipStatus.PENDING)
+    is_leader = Column(Boolean, default=False, nullable=False)
     requested_at = Column(DateTime(timezone=True), server_default=func.now())
     decided_at = Column(DateTime(timezone=True), nullable=True)
     decided_by = Column(Integer, ForeignKey("users.id"), nullable=True)

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from typing import Optional, Any, List
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
@@ -55,9 +55,21 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         raise HTTPException(status_code=400, detail="Inactive user")
     return user
 
-def role_required(allowed_roles: list[UserRole]):
+def role_required(allowed_roles: List[UserRole]):
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in allowed_roles:
+        # SUPER_ADMIN inherits ADMIN and ADMINISTRATOR privileges
+        is_super = current_user.role in [UserRole.SUPER_ADMIN, UserRole.ADMINISTRATOR]
+        is_admin = current_user.role in [UserRole.ADMIN, UserRole.ADMINISTRATOR, UserRole.SUPER_ADMIN]
+        
+        permitted = False
+        if current_user.role in allowed_roles:
+            permitted = True
+        elif UserRole.ADMIN in allowed_roles and is_admin:
+            permitted = True
+        elif UserRole.SUPER_ADMIN in allowed_roles and is_super:
+            permitted = True
+            
+        if not permitted:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Operation not permitted"

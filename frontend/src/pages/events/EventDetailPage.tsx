@@ -34,7 +34,7 @@ export const EventDetailPage = () => {
           <Typography variant="h4" gutterBottom>{event.title}</Typography>
           <Typography color="text.secondary">Date: {new Date(event.event_date).toLocaleString()}</Typography>
           <Typography color="text.secondary">Venue: {event.venue}</Typography>
-          <Typography color="text.secondary">Deadline: {new Date(event.registration_deadline).toLocaleString()}</Typography>
+          <Typography color="text.secondary">Deadline: {event.registration_deadline ? new Date(event.registration_deadline).toLocaleString() : 'N/A'}</Typography>
           <Typography sx={{ mt: 2, mb: 2 }}>{event.description}</Typography>
           
           <Typography variant="body2" sx={{ mb: 2, fontWeight: 'bold' }}>

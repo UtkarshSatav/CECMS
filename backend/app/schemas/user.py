@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from app.models.user import UserRole
 
@@ -26,6 +26,8 @@ class UserResponse(UserBase):
     role: UserRole
     is_active: bool
     created_at: datetime
+    is_club_leader: Optional[bool] = False
+    led_club_ids: Optional[List[int]] = []
 
     class Config:
         from_attributes = True
@@ -33,6 +35,7 @@ class UserResponse(UserBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user: Optional[UserResponse] = None
 
 class TokenData(BaseModel):
     email: Optional[str] = None

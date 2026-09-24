@@ -6,10 +6,13 @@ from app.database import Base
 from sqlalchemy.orm import relationship
 
 class UserRole(str, enum.Enum):
+    SUPER_ADMIN = "SUPER_ADMIN"
+    ADMIN = "ADMIN"
     STUDENT = "STUDENT"
+    # Legacy / alias roles for compatibility
+    ADMINISTRATOR = "ADMINISTRATOR"
     CLUB_COORDINATOR = "CLUB_COORDINATOR"
     FACULTY_COORDINATOR = "FACULTY_COORDINATOR"
-    ADMINISTRATOR = "ADMINISTRATOR"
 
 class User(Base):
     __tablename__ = "users"
@@ -24,8 +27,14 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    clubs_led = relationship("Club", foreign_keys="Club.leader_id", back_populates="leader")
     clubs_coordinated = relationship("Club", foreign_keys="Club.club_coordinator_id", back_populates="club_coordinator")
     faculty_clubs = relationship("Club", foreign_keys="Club.faculty_coordinator_id", back_populates="faculty_coordinator")
     memberships = relationship("Membership", foreign_keys="Membership.student_id", back_populates="student")
     events_created = relationship("Event", foreign_keys="Event.created_by", back_populates="creator")
     registrations = relationship("Registration", foreign_keys="Registration.student_id", back_populates="student")
+    
+    # New workflow requests
+    club_requests_created = relationship("ClubRequest", foreign_keys="ClubRequest.requested_by", back_populates="requester")
+    event_requests_created = relationship("EventRequest", foreign_keys="EventRequest.created_by", back_populates="creator")
+    budget_requests_created = relationship("BudgetRequest", foreign_keys="BudgetRequest.created_by", back_populates="creator")

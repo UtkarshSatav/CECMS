@@ -26,6 +26,7 @@ class Event(Base):
     
     club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    event_request_id = Column(Integer, ForeignKey("event_requests.id"), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

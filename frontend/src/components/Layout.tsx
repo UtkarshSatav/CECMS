@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   AppBar, Toolbar, Typography, Button, IconButton, Drawer, 
-  List, ListItem, ListItemButton, ListItemText, Box, useMediaQuery, useTheme 
+  List, ListItem, ListItemButton, ListItemText, Box, useMediaQuery, useTheme, Chip 
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,30 +21,88 @@ export const Layout = () => {
 
   const navItems = () => {
     const role = user?.role;
+    const isSuper = role === 'SUPER_ADMIN' || role === 'ADMINISTRATOR';
+    const isAdmin = role === 'ADMIN';
+    const isStudent = role === 'STUDENT' || role === 'CLUB_COORDINATOR';
+
     const base = [
       { text: 'Dashboard', path: '/dashboard' },
-      { text: 'Profile', path: '/profile' }
     ];
 
-    if (role === 'STUDENT') {
-      return [...base, { text: 'Clubs', path: '/clubs' }, { text: 'Events', path: '/events' }, { text: 'My Registrations', path: '/registrations' }];
+    if (isSuper) {
+      return [
+        ...base,
+        { text: 'Approve Clubs', path: '/admin/club-requests' },
+        { text: 'Approve Budgets', path: '/admin/budget-requests' },
+        { text: 'Manage Clubs', path: '/clubs/manage' },
+        { text: 'Events', path: '/events' },
+        { text: 'User Management', path: '/admin/users' },
+        { text: 'Reports', path: '/reports' },
+        { text: 'Profile', path: '/profile' }
+      ];
     }
-    if (role === 'CLUB_COORDINATOR') {
-      return [...base, { text: 'Events', path: '/events' }, { text: 'Create Event', path: '/events/create' }, { text: 'Manage Events', path: '/events/manage' }, { text: 'Attendance', path: '/attendance' }];
+
+    if (isAdmin) {
+      return [
+        ...base,
+        { text: 'Club Requests', path: '/admin/club-requests' },
+        { text: 'Allot Students', path: '/clubs/manage' },
+        { text: 'Event Requests', path: '/admin/event-requests' },
+        { text: 'Budget Requests', path: '/admin/budget-requests' },
+        { text: 'Events', path: '/events' },
+        { text: 'Attendance', path: '/attendance' },
+        { text: 'Create Users', path: '/admin/users' },
+        { text: 'Reports', path: '/reports' },
+        { text: 'Profile', path: '/profile' }
+      ];
     }
-    if (role === 'FACULTY_COORDINATOR') {
-      return [...base, { text: 'Clubs Overview', path: '/faculty' }];
+
+    if (isStudent) {
+      const studentItems = [
+        ...base,
+        { text: 'Clubs', path: '/clubs' },
+        { text: 'Events', path: '/events' },
+        { text: 'My Registrations', path: '/registrations' },
+      ];
+
+      if (user?.is_club_leader) {
+        studentItems.push(
+          { text: '⭐ Request Event', path: '/club-leader/create-event-request' },
+          { text: '⭐ My Event Requests', path: '/club-leader/event-requests' },
+          { text: '⭐ Club Attendance', path: '/attendance' }
+        );
+      }
+
+      studentItems.push({ text: 'Profile', path: '/profile' });
+      return studentItems;
     }
-    if (role === 'ADMINISTRATOR') {
-      return [...base, { text: 'Manage Clubs', path: '/clubs/manage' }, { text: 'Events', path: '/events' }, { text: 'Reports', path: '/reports' }, { text: 'Create User', path: '/admin/users' }];
+
+    return [...base, { text: 'Profile', path: '/profile' }];
+  };
+
+  const getRoleBadge = () => {
+    if (!user) return null;
+    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMINISTRATOR') {
+      return <Chip label="Super Admin" color="secondary" size="small" sx={{ ml: 1, fontWeight: 'bold' }} />;
     }
-    return base;
+    if (user.role === 'ADMIN') {
+      return <Chip label="Admin" color="info" size="small" sx={{ ml: 1, fontWeight: 'bold' }} />;
+    }
+    if (user.is_club_leader) {
+      return <Chip label="⭐ Club Leader" color="warning" size="small" sx={{ ml: 1, fontWeight: 'bold' }} />;
+    }
+    return <Chip label="Student" color="default" size="small" sx={{ ml: 1, bgcolor: 'rgba(255,255,255,0.2)', color: '#fff' }} />;
   };
 
   const drawer = (
     <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap>CECMS</Typography>
+      <Toolbar sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', py: 2 }}>
+        <Typography variant="h6" noWrap sx={{ fontWeight: 'bold' }}>
+          CECMS
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Campus Event & Club MS
+        </Typography>
       </Toolbar>
       <List>
         {navItems().map((item) => (
@@ -54,6 +112,13 @@ export const Layout = () => {
               onClick={() => {
                 navigate(item.path);
                 if (isMobile) setMobileOpen(false);
+              }}
+              sx={{
+                '&.Mui-selected': {
+                  bgcolor: 'action.selected',
+                  borderLeft: '4px solid #1976d2',
+                  fontWeight: 'bold'
+                }
               }}
             >
               <ListItemText primary={item.text} />
@@ -76,8 +141,11 @@ export const Layout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Campus Event & Club Management System
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+            CECMS {getRoleBadge()}
+          </Typography>
+          <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
+            {user?.full_name}
           </Typography>
           <Button color="inherit" onClick={() => { logout(); navigate('/login'); }}>
             Logout
