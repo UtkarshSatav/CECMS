@@ -20,6 +20,8 @@ from app.routers import (
 
 def run_db_migrations():
     """Ensure newly added columns exist in sqlite tables without needing full alembic."""
+    if not str(engine.url).startswith("sqlite"):
+        return
     with engine.connect() as conn:
         # Check clubs.leader_id
         try:
